@@ -1,0 +1,126 @@
+{% extends "base.html" %} {% block content %}
+<div class="row mb-4">
+  <div class="col-md-12">
+    <h2><i class="fas fa-search"></i> Analyse de Match Spécifique</h2>
+    <p>Recherchez un match par équipe pour obtenir une analyse détaillée</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6 mx-auto">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-search"></i> Recherche par équipe</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label for="teamSearch" class="form-label">Nom de l'équipe</label>
+          <input
+            type="text"
+            class="form-control"
+            id="teamSearch"
+            placeholder="Ex: Liverpool, PSG, Real Madrid..."
+          />
+        </div>
+        <button class="btn btn-primary w-100" onclick="searchTeam()">
+          <i class="fas fa-search"></i> Rechercher
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-4">
+  <div class="col-md-12">
+    <div id="teamResults"></div>
+  </div>
+</div>
+
+<div class="row mt-4" id="analysisResult" style="display: none">
+  <div class="col-md-12">
+    <h3><i class="fas fa-chart-line"></i> Analyse Détaillée</h3>
+    <div id="analysisContent"></div>
+  </div>
+</div>
+
+<script>
+  function searchTeam() {
+    const teamName = $("#teamSearch").val().trim();
+
+    if (!teamName) {
+      alert("Veuillez entrer un nom d'équipe");
+      return;
+    }
+
+    $("#teamResults").html(
+      '<div class="loader"></div><p class="text-center">Recherche en cours...</p>',
+    );
+    $("#analysisResult").hide();
+
+    $.ajax({
+      url: "/api/search-team",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({ team_name: teamName }),
+      success: function (response) {
+        if (response.success && response.matches.length > 0) {
+          displayTeamMatches(response.matches, response.team);
+        } else {
+          $("#teamResults").html(
+            '<p class="text-warning text-center">Aucun match trouvé pour ' +
+              teamName +
+              "</p>",
+          );
+        }
+      },
+      error: function () {
+        $("#teamResults").html(
+          '<p class="text-danger text-center">Erreur lors de la recherche</p>',
+        );
+      },
+    });
+  }
+
+  function displayTeamMatches(matches, teamName) {
+    let html = `
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Matchs de ${teamName}</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+    `;
+
+    matches.forEach((match) => {
+      html += `
+            <button class="list-group-item list-group-item-action" onclick="analyzeMatch(${match.id})">
+                <div class="row">
+                    <div class="col-md-8">
+                        <strong>${match.home_team}</strong> vs <strong>${match.away_team}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        ${match.date} - ${match.competition}
+                    </div>
+                </div>
+            </button>
+        `;
+    });
+
+    html += `
+                </div>
+            </div>
+        </div>
+    `;
+
+    $("#teamResults").html(html);
+  }
+
+  function analyzeMatch(matchId) {
+    alert(
+      "Fonctionnalité en cours de développement - Analyse détaillée du match " +
+        matchId,
+    );
+    // Rediriger vers une page d'analyse ou afficher dans une modale
+  }
+</script>
+{% endblock %}

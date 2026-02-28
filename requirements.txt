@@ -1,0 +1,27 @@
+# Core dependencies
+flask==2.3.3
+flask-cors==4.0.0
+requests==2.31.0
+pandas==2.1.4
+numpy==1.24.3
+scikit-learn==1.3.2
+scipy==1.11.4
+matplotlib==3.8.2
+python-dateutil==2.8.2
+gunicorn==21.2.0  # Pour la production
+
+# Optional but recommended
+joblib==1.3.2
+threadpoolctl==3.2.0
+certifi==2023.11.17
+charset-normalizer==3.3.2
+idna==3.6
+urllib3==2.1.0
+pillow==10.1.0
+packaging==23.2
+pyparsing==3.1.1
+cycler==0.12.1
+kiwisolver==1.4.5
+contourpy==1.2.0
+fonttools==4.47.0
+APScheduler==3.10.4

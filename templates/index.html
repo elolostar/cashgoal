@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>⚽ CASHGOAL ULTRA - Prédiction Tous Marchés</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+      }
+      .navbar {
+        background: rgba(0, 0, 0, 0.8) !important;
+        backdrop-filter: blur(10px);
+      }
+      .main-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        margin-top: 50px;
+        overflow: hidden;
+      }
+      .header-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        text-align: center;
+      }
+      .feature-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+      }
+      .feature-card:hover {
+        transform: translateY(-10px);
+      }
+      .feature-icon {
+        font-size: 48px;
+        color: #667eea;
+        margin-bottom: 20px;
+      }
+      .btn-ultra {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 18px;
+        font-weight: bold;
+        transition: transform 0.3s;
+      }
+      .btn-ultra:hover {
+        transform: scale(1.05);
+        color: white;
+      }
+      .market-badge {
+        background: #f8f9fa;
+        border-radius: 20px;
+        padding: 5px 15px;
+        margin: 5px;
+        display: inline-block;
+        font-size: 14px;
+      }
+      .footer {
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        margin-top: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container">
+        <a class="navbar-brand" href="/">
+          <i class="fas fa-crown"></i> CASHGOAL ULTRA
+        </a>
+        <div class="navbar-nav ms-auto">
+          <a class="nav-link" href="/">Accueil</a>
+          <a class="nav-link" href="/predictions">Prédictions</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="main-card">
+        <div class="header-gradient">
+          <h1 class="display-4"><i class="fas fa-robot"></i> CASHGOAL ULTRA</h1>
+          <p class="lead">
+            Le système de prédiction le plus avancé - 14 marchés analysés
+          </p>
+        </div>
+
+        <div class="row p-4">
+          <div class="col-md-4">
+            <div class="feature-card text-center">
+              <i class="fas fa-chart-pie feature-icon"></i>
+              <h4>14 Marchés</h4>
+              <p>
+                1N2, Double Chance, BTTS, Over/Under, Handicap, Totaux par
+                équipe, Mi-temps, Intervalles...
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="feature-card text-center">
+              <i class="fas fa-brain feature-icon"></i>
+              <h4>IA Multi-Modèles</h4>
+              <p>
+                Random Forest, Gradient Boosting, Poisson, distributions
+                historiques
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="feature-card text-center">
+              <i class="fas fa-clock feature-icon"></i>
+              <h4>Analyse Temporelle</h4>
+              <p>Buts par intervalle, comparaison mi-temps, timing des buts</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row p-4">
+          <div class="col-md-6">
+            <h4><i class="fas fa-list"></i> Marchés analysés</h4>
+            <div>
+              <span class="market-badge">1N2</span>
+              <span class="market-badge">Double Chance</span>
+              <span class="market-badge">BTTS</span>
+              <span class="market-badge">Over/Under 0.5</span>
+              <span class="market-badge">Over/Under 1.5</span>
+              <span class="market-badge">Over/Under 2.5</span>
+              <span class="market-badge">Over/Under 3.5</span>
+              <span class="market-badge">Over/Under 4.5</span>
+              <span class="market-badge">Over/Under 5.5</span>
+              <span class="market-badge">Total Asiatique</span>
+              <span class="market-badge">Handicap</span>
+              <span class="market-badge">Total 1 (domicile)</span>
+              <span class="market-badge">Total 2 (extérieur)</span>
+              <span class="market-badge">Buts par intervalle</span>
+              <span class="market-badge">Buts en mi-temps</span>
+              <span class="market-badge">Nul en mi-temps</span>
+              <span class="market-badge">Comparaison MT/2MT</span>
+              <span class="market-badge">Scores exacts</span>
+            </div>
+          </div>
+          <div class="col-md-6 text-center">
+            <h4><i class="fas fa-rocket"></i> Prêt à commencer ?</h4>
+            <a href="/predictions" class="btn btn-ultra mt-3">
+              <i class="fas fa-magic"></i> Lancer les prédictions
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer text-center">
+      <div class="container">
+        <p class="mb-0">
+          <i class="fas fa-crown"></i> CASHGOAL ULTRA - L'analyse de matchs la
+          plus complète
+        </p>
+        <small class="text-muted"
+          >Les paris sportifs comportent des risques. Jouez
+          responsablement.</small
+        >
+      </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

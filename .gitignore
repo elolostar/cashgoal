@@ -1,0 +1,23 @@
+# Environnement virtuel
+venv/
+env/
+ENV/
+football_env/
+
+# Fichiers Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Fichiers de configuration
+.python-version
+.vscode/
+.idea/
+
+# Modèles sauvegardés
+models.pkl
+
+# Clés API (si vous avez)
+.env
+*.env
