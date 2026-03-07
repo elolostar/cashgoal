@@ -1609,18 +1609,90 @@ def main():
         import subprocess
         subprocess.run('chcp 65001', shell=True, capture_output=True)
     
+    print("="*60)
+    print("🏆 FOOTBALL MATCH SELECTOR ULTRA - DÉMARRAGE")
+    print("="*60)
+    
     selector = FootballMatchSelectorUltra(api_key="1b9fa9eead33409cb75f3d0a2df60324")
     
     if selector.test_api_connection():
         print("✅ Connexion API réussie!")
         
         if not selector.is_trained:
-            print("\n📚 Premier lancement - Entraînement avec données historiques...")
-            selector.train_with_historical_data()
+            print("\n📚 Entraînement des modèles...")
+            selector.train_with_historical_data(['FL1', 'CL', 'EL', 'EC'])
+        
+        print("\n🔍 ANALYSE DES MATCHS À VENIR")
+        print("="*60)
+        
+        # Analyser plusieurs compétitions
+        competitions_to_analyze = ['FL1', 'PD', 'PL', 'SA', 'BL1', 'CL']
+        
+        for comp in competitions_to_analyze:
+            print(f"\n📊 Compétition: {selector.competitions[comp]['name']}")
+            matches = selector.fetch_upcoming_matches(comp, days_ahead=7)
+            
+            if matches:
+                print(f"   {len(matches)} matchs trouvés")
+                
+                # Sélectionner les meilleurs matchs
+                best_matches = selector.select_best_matches(matches, max_matches=2)
+                
+                for i, match_data in enumerate(best_matches):
+                    match = match_data['match']
+                    markets = match_data['markets']
+                    
+                    print(f"\n{'='*60}")
+                    print(f"🏆 MATCH #{i+1}: {match['home_team']} vs {match['away_team']}")
+                    print(f"📅 {match['date']} à {match['time']}")
+                    print(f"🏟️ {match['competition_name']}")
+                    print(f"📊 Confiance globale: {markets['global_confidence']['average']}% ({markets['global_confidence']['level']})")
+                    
+                    # Afficher les paris sûrs
+                    safe_bets = selector.identify_safe_bets(markets)
+                    if safe_bets:
+                        print("\n🎯 PARIS RECOMMANDÉS:")
+                        for bet in safe_bets[:3]:
+                            print(f"   {bet['emoji']} {bet['prediction']}: {bet['probability']}% ({bet['confidence']})")
+                            print(f"      ➡️ {bet['reason']}")
+                    
+                    # Afficher les scores exacts probables
+                    if 'exact_scores' in markets:
+                        print("\n📊 SCORES EXACTS PROBABLES:")
+                        for score in markets['exact_scores'][:3]:
+                            print(f"   {score['score']}: {score['probability']}%")
+                    
+                    # Afficher les infos contexte si disponibles
+                    if markets.get('context_info'):
+                        print("\n🌍 CONTEXTE:")
+                        if markets['context_info'].get('weather'):
+                            weather = markets['context_info']['weather']
+                            if weather:
+                                print(f"   Météo: {weather.get('condition', 'N/A')}, {weather.get('temperature', '?')}°C")
+                        
+                        if markets.get('lineups_info'):
+                            lineups = markets['lineups_info']
+                            if lineups:
+                                print(f"   Meilleur buteur domicile présent: {'✅' if lineups.get('home_top_scorer_playing') else '❌'}")
+                                print(f"   Meilleur buteur extérieur présent: {'✅' if lineups.get('away_top_scorer_playing') else '❌'}")
+                    
+                    print(f"\n   {'='*50}")
+                    
+                    # Pause entre les matchs
+                    time.sleep(2)
+            else:
+                print(f"   ⚠️ Aucun match trouvé pour cette compétition")
+            
+            # Pause entre les compétitions
+            time.sleep(3)
+        
+        print("\n" + "="*60)
+        print("✅ ANALYSE TERMINÉE - Rafraîchissez la page dans 1 heure")
+        print("="*60)
+        
     else:
         print("❌ Échec connexion API")
-        return
-
+        print("   Vérifiez votre clé API et votre connexion internet")
 
 if __name__ == "__main__":
     main()
