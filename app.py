@@ -10,7 +10,7 @@ import threading
 import traceback
 
 # Configuration du logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -21,7 +21,7 @@ print("="*60)
 print("🚀 CASHGOAL ULTRA INTELLIGENT - DÉMARRAGE")
 print("="*60)
 
-# Récupérer la clé API depuis les variables d'environnement (plus sécurisé)
+# Récupérer la clé API depuis les variables d'environnement
 API_KEY = os.environ.get('API_KEY', "1b9fa9eead33409cb75f3d0a2df60324")
 print(f"🔑 Clé API: {API_KEY[:5]}...{API_KEY[-5:]}")
 
@@ -86,11 +86,13 @@ print("="*60)
 @app.route('/')
 def index():
     """Page d'accueil"""
+    logger.info("Accès à la page d'accueil")
     return render_template('index.html')
 
 @app.route('/predictions')
 def predictions():
     """Page des prédictions"""
+    logger.info("Accès à la page des prédictions")
     return render_template('predictions.html', competitions=selector.competitions)
 
 @app.route('/health')
@@ -110,6 +112,7 @@ def health():
 @app.route('/api/training-status', methods=['GET'])
 def get_training_status():
     """Retourne le statut de l'entraînement"""
+    logger.debug("GET /api/training-status")
     return jsonify({
         'success': True,
         'is_trained': selector.is_trained or training_status['completed'],
@@ -122,6 +125,7 @@ def get_training_status():
 @app.route('/api/competitions', methods=['GET'])
 def get_competitions():
     """Liste des compétitions disponibles"""
+    logger.debug("GET /api/competitions")
     return jsonify({
         'success': True,
         'competitions': selector.competitions
@@ -130,11 +134,15 @@ def get_competitions():
 @app.route('/api/matches', methods=['POST'])
 def get_matches():
     """Récupère les matchs sans analyse poussée (rapide)"""
+    logger.info("POST /api/matches")
     data = request.json
+    logger.debug(f"Données reçues: {data}")
+    
     competition_code = data.get('competition')
     days_ahead = int(data.get('days_ahead', 3))  # 3 jours par défaut
     
     if not competition_code:
+        logger.error("Code compétition manquant")
         return jsonify({'success': False, 'error': 'Code compétition manquant'}), 400
     
     try:
@@ -171,39 +179,52 @@ def get_matches():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/analyze-match', methods=['POST'])
-@app.route('/api/analyze-matches', methods=['POST'])  # Alias pour compatibilité
 def analyze_match():
     """Analyse UN SEUL match à la fois"""
+    logger.info("="*50)
+    logger.info("POST /api/analyze-match")
+    
     data = request.json
+    logger.debug(f"Données reçues: {data}")
+    
     match_id = data.get('match_id')
     
     if not match_id:
+        logger.error("❌ ID match manquant")
         return jsonify({'success': False, 'error': 'ID match manquant'}), 400
     
     try:
         logger.info(f"🔍 Analyse du match {match_id}")
         
         # Chercher le match dans les compétitions récentes
+        logger.debug("Recherche du match dans FL1...")
         matches = selector.fetch_upcoming_matches('FL1', 3)
+        
         if not matches:
+            logger.debug("Aucun match en FL1, recherche dans CL...")
             matches = selector.fetch_upcoming_matches('CL', 3)
+        
+        logger.debug(f"Total matchs récupérés: {len(matches)}")
         
         target_match = None
         for match in matches:
             if str(match['id']) == str(match_id):
                 target_match = match
+                logger.debug(f"✅ Match trouvé: {match['home_team']} vs {match['away_team']}")
                 break
         
         if not target_match:
+            logger.error(f"❌ Match {match_id} non trouvé dans {len(matches)} matchs")
             return jsonify({'success': False, 'error': 'Match non trouvé'}), 404
         
         # Analyser UNIQUEMENT ce match
+        logger.info(f"Analyse du match: {target_match['home_team']} vs {target_match['away_team']}")
         markets = selector.analyze_all_markets(target_match)
         safe_bets = selector.identify_safe_bets(markets)
         
-        logger.info(f"✅ Analyse terminée pour {target_match['home_team']} vs {target_match['away_team']}")
+        logger.info(f"✅ Analyse terminée - Confiance: {markets['global_confidence']['average']}%")
         
-        return jsonify({
+        response_data = {
             'success': True,
             'match': {
                 'id': target_match['id'],
@@ -215,81 +236,32 @@ def analyze_match():
             },
             'markets': markets,
             'safe_bets': safe_bets[:5]  # Top 5 paris sûrs
-        })
+        }
+        
+        logger.info("✅ Réponse préparée avec succès")
+        logger.info("="*50)
+        
+        return jsonify(response_data)
         
     except Exception as e:
-        logger.error(f"Erreur analyse match: {e}")
+        logger.error(f"❌ Erreur analyse match: {e}")
         traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': f"Erreur lors de l'analyse: {str(e)}"}), 500
 
-@app.route('/api/analyze-competition', methods=['POST'])
-def analyze_competition():
-    """Analyse plusieurs matchs d'une compétition"""
-    data = request.json
-    competition_code = data.get('competition')
-    days_ahead = int(data.get('days_ahead', 3))
-    max_matches = int(data.get('max_matches', 3))
-    
-    if not competition_code:
-        return jsonify({'success': False, 'error': 'Code compétition manquant'}), 400
-    
-    try:
-        logger.info(f"🔍 Analyse compétition {competition_code} (J+{days_ahead})")
-        
-        # Récupérer les matchs
-        matches = selector.fetch_upcoming_matches(competition_code, days_ahead)
-        
-        if not matches:
-            return jsonify({'success': False, 'error': 'Aucun match trouvé'}), 404
-        
-        # Entraîner le modèle Poisson
-        selector.train_poisson_model(matches)
-        
-        # Sélectionner les meilleurs matchs
-        best_matches = selector.select_best_matches(matches, max_matches)
-        
-        results = []
-        for result in best_matches:
-            match = result['match']
-            markets = result['markets']
-            safe_bets = selector.identify_safe_bets(markets)
-            
-            results.append({
-                'match': {
-                    'id': match['id'],
-                    'home_team': match['home_team'],
-                    'away_team': match['away_team'],
-                    'date': match['date'],
-                    'time': match.get('time', '--:--'),
-                    'competition': match['competition_name']
-                },
-                'confidence': result['confidence'],
-                'markets': {
-                    '1N2': markets['1N2'],
-                    'double_chance': markets['double_chance'],
-                    'btts': markets['btts'],
-                    'total_goals': markets['total_goals'],
-                    'exact_scores': markets.get('exact_scores', [])[:3]
-                },
-                'safe_bets': safe_bets[:3]
-            })
-        
-        logger.info(f"✅ {len(results)} matchs analysés")
-        
-        return jsonify({
-            'success': True,
-            'predictions': results,
-            'count': len(results)
-        })
-        
-    except Exception as e:
-        logger.error(f"Erreur analyse compétition: {e}")
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
+# AJOUTEZ CETTE ROUTE POUR DEBUG
+@app.route('/api/test-analyze', methods=['GET'])
+def test_analyze():
+    """Route de test pour vérifier que l'API fonctionne"""
+    return jsonify({
+        'success': True,
+        'message': 'API fonctionne correctement',
+        'timestamp': datetime.now().isoformat()
+    })
 
 @app.route('/api/debug', methods=['GET'])
 def debug_info():
     """Endpoint de débogage"""
+    logger.debug("GET /api/debug")
     return jsonify({
         'success': True,
         'api_key_configured': bool(API_KEY),
@@ -297,6 +269,7 @@ def debug_info():
         'is_trained': selector.is_trained,
         'training_status': training_status,
         'competitions_count': len(selector.competitions),
+        'competitions': list(selector.competitions.keys()),
         'cache_stats': {
             'teams': len(selector.teams_cache),
             'lineups': len(selector.lineups_cache),
@@ -311,11 +284,26 @@ def debug_info():
 @app.errorhandler(404)
 def not_found(error):
     """Page 404 personnalisée"""
-    return jsonify({'success': False, 'error': 'Endpoint non trouvé'}), 404
+    logger.warning(f"404 - Endpoint non trouvé: {request.path}")
+    return jsonify({
+        'success': False, 
+        'error': f'Endpoint non trouvé: {request.path}',
+        'available_endpoints': [
+            '/',
+            '/predictions',
+            '/health',
+            '/api/training-status',
+            '/api/competitions',
+            '/api/matches',
+            '/api/analyze-match',
+            '/api/debug'
+        ]
+    }), 404
 
 @app.errorhandler(500)
 def internal_error(error):
     """Erreur serveur"""
+    logger.error(f"500 - Erreur interne: {error}")
     return jsonify({'success': False, 'error': 'Erreur interne du serveur'}), 500
 
 # ============================================
@@ -323,8 +311,8 @@ def internal_error(error):
 # ============================================
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8000))  # Koyeb utilise le port 8000
-    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    port = int(os.environ.get('PORT', 8000))
+    debug = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
     
     print("\n" + "="*60)
     print("🚀 CASHGOAL ULTRA INTELLIGENT - SERVEUR DÉMARRÉ")
@@ -338,7 +326,7 @@ if __name__ == '__main__':
     print("   - GET  /api/competitions      Liste compétitions")
     print("   - POST /api/matches           Récupérer matchs")
     print("   - POST /api/analyze-match     Analyser un match")
-    print("   - POST /api/analyze-competition Analyser compétition")
+    print("   - GET  /api/test-analyze      Test API")
     print("   - GET  /api/debug             Infos débogage")
     print("="*60)
     
