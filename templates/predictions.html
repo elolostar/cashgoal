@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>⚽ CASHGOAL ULTRA - Prédictions Intelligentes</title>
+    <title>CASHGOAL - Prédictions</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -19,100 +19,44 @@
         min-height: 100vh;
       }
       .navbar {
-        background: rgba(0, 0, 0, 0.9) !important;
+        background: rgba(0, 0, 0, 0.8) !important;
         backdrop-filter: blur(10px);
       }
-      .main-card {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        margin: 30px 0;
-        padding: 30px;
-      }
-      .market-card {
-        background: #f8f9fa;
-        border-radius: 15px;
+      .container {
         padding: 20px;
-        margin-bottom: 20px;
-        border-left: 5px solid #667eea;
       }
-      .safe-bets-section {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      .card {
+        background: rgba(255, 255, 255, 0.95);
         border-radius: 15px;
-        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         margin-bottom: 20px;
-        color: white;
       }
-      .safe-bet-item {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
-        padding: 10px;
-        margin: 5px 0;
-        border-left: 4px solid white;
+      .match-card {
+        cursor: pointer;
+        transition: transform 0.2s;
       }
-      .confidence-extreme {
-        background: #dc3545;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: bold;
+      .match-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
       }
-      .confidence-tres-haute {
-        background: #fd7e14;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: bold;
-      }
-      .confidence-haute {
-        background: #ffc107;
-        color: black;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: bold;
-      }
-      .confidence-moyenne {
-        background: #17a2b8;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: bold;
-      }
-      .probability-bar {
-        height: 25px;
-        background: #e9ecef;
-        border-radius: 12px;
-        overflow: hidden;
-        margin: 10px 0;
-      }
-      .probability-fill {
-        height: 100%;
+      .btn-ultra {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
+        border: none;
+        transition: transform 0.2s;
+      }
+      .btn-ultra:hover {
+        transform: scale(1.05);
+        color: white;
+      }
+      .loading {
+        display: none;
         text-align: center;
-        line-height: 25px;
-        font-size: 14px;
+        padding: 40px;
       }
-      .confidence-circle {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        font-weight: bold;
-        margin: 0 auto;
-      }
-      .loader {
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid #667eea;
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
         border-radius: 50%;
         width: 50px;
         height: 50px;
@@ -127,42 +71,12 @@
           transform: rotate(360deg);
         }
       }
-      .score-chip {
-        display: inline-block;
-        background: #e9ecef;
-        padding: 5px 12px;
-        border-radius: 20px;
-        margin: 3px;
-        font-size: 14px;
-      }
-      .badge-suggestion {
-        background: #28a745;
-        color: white;
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: bold;
-      }
-      .lineup-info {
-        background: #e3f2fd;
-        border-radius: 10px;
-        padding: 10px;
-        margin-top: 10px;
-      }
-      .h2h-info {
-        background: #fff3e0;
-        border-radius: 10px;
-        padding: 10px;
-        margin-top: 10px;
-      }
-      .absent-badge {
-        background: #dc3545;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: bold;
-        margin-left: 5px;
+      .bet-item {
+        background: #f8f9fa;
+        border-left: 4px solid gold;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
       }
     </style>
   </head>
@@ -170,361 +84,226 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container">
         <a class="navbar-brand" href="/">
-          <i class="fas fa-brain"></i> CASHGOAL INTELLIGENT
+          <i class="fas fa-crown"></i> CASHGOAL ULTRA
         </a>
         <div class="navbar-nav ms-auto">
           <a class="nav-link" href="/">Accueil</a>
-          <a class="nav-link" href="/predictions">Prédictions</a>
+          <a class="nav-link active" href="/predictions">Prédictions</a>
+          <a class="nav-link" href="/api/debug">Debug</a>
         </div>
       </div>
     </nav>
 
     <div class="container">
-      <div class="main-card">
-        <!-- Statut d'entraînement -->
-        <div
-          id="trainingStatus"
-          class="alert alert-info mb-4"
-          style="display: none"
-        >
-          <i class="fas fa-spinner fa-spin"></i>
-          <span id="trainingMessage"></span>
-        </div>
-
-        <h2 class="mb-4">
-          <i class="fas fa-magic"></i> Prédictions Intelligentes
-          <span class="badge-suggestion ms-3">IA trouve les paris sûrs</span>
+      <div class="card p-4">
+        <h2 class="text-center mb-4">
+          <i class="fas fa-magic"></i> Prédictions de Matchs
         </h2>
 
-        <div class="row mb-4">
+        <div class="row">
           <div class="col-md-4">
-            <label>Compétition</label>
+            <label class="form-label">Compétition</label>
             <select class="form-select" id="competition">
-              <option value="">Choisissez...</option>
-              {% for code, info in competitions.items() %}
-              <option value="{{ code }}">{{ info.name }}</option>
-              {% endfor %}
+              <option value="FL1">Ligue 1 (France)</option>
+              <option value="CL">UEFA Champions League</option>
+              <option value="PL">Premier League</option>
+              <option value="PD">La Liga</option>
+              <option value="SA">Serie A</option>
+              <option value="BL1">Bundesliga</option>
             </select>
           </div>
-          <div class="col-md-3">
-            <label>Période</label>
-            <select class="form-select" id="period">
-              <option value="0">Aujourd'hui</option>
-              <option value="3" selected>3 jours</option>
-              <option value="7">7 jours</option>
-              <option value="14">14 jours</option>
+          <div class="col-md-4">
+            <label class="form-label">Période</label>
+            <select class="form-select" id="days">
+              <option value="3">3 prochains jours</option>
+              <option value="5">5 prochains jours</option>
+              <option value="7">7 prochains jours</option>
             </select>
           </div>
-          <div class="col-md-2">
-            <label>Matchs</label>
-            <select class="form-select" id="nMatches">
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5" selected>5</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label>&nbsp;</label>
-            <button class="btn btn-primary w-100" onclick="analyzeMatches()">
-              <i class="fas fa-brain"></i> Analyse Intelligente
+          <div class="col-md-4 d-flex align-items-end">
+            <button class="btn btn-ultra w-100" onclick="loadMatches()">
+              <i class="fas fa-search"></i> Charger les matchs
             </button>
           </div>
         </div>
+      </div>
 
-        <div id="predictionsContainer">
-          <div class="text-center text-muted py-5">
-            <i class="fas fa-arrow-up fa-3x mb-3"></i>
-            <p>
-              Sélectionnez une compétition et cliquez sur "Analyse Intelligente"
-            </p>
-          </div>
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p class="text-white">Analyse en cours...</p>
+      </div>
+
+      <div id="matchesSection" style="display: none">
+        <div class="card p-4">
+          <h3><i class="fas fa-futbol"></i> Matchs disponibles</h3>
+          <div class="row" id="matchesList"></div>
+        </div>
+      </div>
+
+      <div id="predictionSection" style="display: none">
+        <div class="card p-4">
+          <h3><i class="fas fa-chart-line"></i> Analyse détaillée</h3>
+          <div id="predictionContent"></div>
         </div>
       </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-      // Vérifier le statut d'entraînement
-      function checkTrainingStatus() {
-        $.get("/api/training-status", function (data) {
-          if (data.training_in_progress) {
-            $("#trainingStatus").show();
-            $("#trainingMessage").text(data.message);
-            setTimeout(checkTrainingStatus, 2000);
-          } else if (!data.is_trained) {
-            $("#trainingStatus").show();
-            $("#trainingMessage").text("Préparation des modèles...");
-            setTimeout(checkTrainingStatus, 2000);
+      async function loadMatches() {
+        const competition = document.getElementById("competition").value;
+        const days = document.getElementById("days").value;
+
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("matchesSection").style.display = "none";
+        document.getElementById("predictionSection").style.display = "none";
+
+        try {
+          const response = await fetch("/api/matches", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              competition: competition,
+              days_ahead: days,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            displayMatches(data.matches);
           } else {
-            $("#trainingStatus").hide();
+            alert("Erreur: " + data.error);
           }
-        });
-      }
-
-      // Vérifier au chargement
-      checkTrainingStatus();
-
-      function analyzeMatches() {
-        const competition = $("#competition").val();
-        const daysAhead = $("#period").val();
-        const nMatches = $("#nMatches").val();
-
-        if (!competition) {
-          alert("Sélectionnez une compétition");
-          return;
+        } catch (error) {
+          alert("Erreur: " + error);
         }
 
-        $("#predictionsContainer").html(
-          '<div class="loader"></div><p class="text-center">IA en cours d\'analyse...</p>',
-        );
-
-        $.ajax({
-          url: "/api/analyze-matches",
-          method: "POST",
-          contentType: "application/json",
-          data: JSON.stringify({
-            competition: competition,
-            days_ahead: parseInt(daysAhead),
-            n_matches: parseInt(nMatches),
-          }),
-          success: function (response) {
-            if (response.success && response.predictions.length > 0) {
-              displayPredictions(response.predictions);
-            } else {
-              $("#predictionsContainer").html(`
-                            <div class="alert alert-warning">
-                                Aucune prédiction disponible
-                            </div>
-                        `);
-            }
-          },
-          error: function (xhr, status, error) {
-            $("#predictionsContainer").html(`
-                        <div class="alert alert-danger">
-                            Erreur lors de l'analyse: ${error}
-                        </div>
-                    `);
-          },
-        });
+        document.getElementById("loading").style.display = "none";
       }
 
-      function displayPredictions(predictions) {
-        let html = '<h3 class="mt-4">Résultats de l\'analyse intelligente</h3>';
+      function displayMatches(matches) {
+        const list = document.getElementById("matchesList");
+        list.innerHTML = "";
 
-        predictions.forEach((pred, index) => {
-          const m = pred.match;
-          const markets = pred.markets;
-          const safeBets = pred.safe_bets || [];
-
-          html += `
-                    <div class="market-card">
-                        <div class="row">
-                            <div class="col-md-2 text-center">
-                                <div class="confidence-circle">${pred.confidence}%</div>
-                                <p class="mt-2"><strong>${m.home_team}</strong> vs <strong>${m.away_team}</strong></p>
-                                <p class="text-muted">${m.date} à ${m.time}</p>
-                            </div>
-                            <div class="col-md-10">
-                `;
-
-          // SECTION PARIS SÛRS
-          if (safeBets.length > 0) {
-            html += `
-                        <div class="safe-bets-section">
-                            <h5><i class="fas fa-check-circle"></i> Paris identifiés comme SÛRS par l'IA</h5>
-                            <div class="row">
+        if (matches.length === 0) {
+          list.innerHTML =
+            '<div class="col-12"><p class="text-center">Aucun match trouvé</p></div>';
+        } else {
+          matches.forEach((match) => {
+            const col = document.createElement("div");
+            col.className = "col-md-6";
+            col.innerHTML = `
+                        <div class="card match-card p-3" onclick="analyzeMatch(${match.id})">
+                            <h5>${match.home_team} vs ${match.away_team}</h5>
+                            <p class="mb-1"><i class="far fa-calendar"></i> ${match.date} à ${match.time}</p>
+                            <p class="mb-0"><i class="far fa-building"></i> ${match.competition}</p>
+                        </div>
                     `;
-
-            safeBets.slice(0, 4).forEach((bet) => {
-              let confidenceClass = "";
-              if (bet.confidence === "EXTRÊME")
-                confidenceClass = "confidence-extreme";
-              else if (bet.confidence === "TRÈS HAUTE")
-                confidenceClass = "confidence-tres-haute";
-              else if (bet.confidence === "HAUTE")
-                confidenceClass = "confidence-haute";
-              else confidenceClass = "confidence-moyenne";
-
-              html += `
-                            <div class="col-md-6">
-                                <div class="safe-bet-item">
-                                    <div class="d-flex justify-content-between">
-                                        <span><strong>${bet.emoji} ${bet.prediction}</strong></span>
-                                        <span class="${confidenceClass}">${bet.confidence}</span>
-                                    </div>
-                                    <div class="progress mt-2" style="height: 10px;">
-                                        <div class="progress-bar bg-success" style="width: ${bet.probability}%"></div>
-                                    </div>
-                                    <small>${bet.reason}</small>
-                                </div>
-                            </div>
-                        `;
-            });
-
-            html += `</div></div>`;
-          }
-
-          // 1N2
-          html += `
-                    <div class="row mb-3 mt-3">
-                        <div class="col-12">
-                            <h5>🎯 1N2</h5>
-                            <div class="probability-bar">
-                                <div class="probability-fill" style="width: ${markets["1N2"].home}%">
-                                    ${markets["1N2"].home}%
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>${m.home_team}</span>
-                                <span>Nul: ${markets["1N2"].draw}%</span>
-                                <span>${m.away_team}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-          // BTTS
-          html += `
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <h5>⚽ BTTS</h5>
-                            <div class="d-flex">
-                                <span class="badge bg-success me-2">OUI: ${markets.btts.oui}%</span>
-                                <span class="badge bg-danger">NON: ${markets.btts.non}%</span>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <h5>📊 Expected Goals</h5>
-                            <span class="badge bg-info">Total: ${markets.total_goals.expected}</span>
-                        </div>
-                    </div>
-                `;
-
-          // Over/Under
-          html += `
-                    <h5>📈 Over/Under</h5>
-                    <div class="row mb-3">
-                        <div class="col-3"><small>0.5</small><br>O:${markets.total_goals.over_05}% U:${markets.total_goals.under_05}%</div>
-                        <div class="col-3"><small>1.5</small><br>O:${markets.total_goals.over_15}% U:${markets.total_goals.under_15}%</div>
-                        <div class="col-3"><small>2.5</small><br>O:${markets.total_goals.over_25}% U:${markets.total_goals.under_25}%</div>
-                        <div class="col-3"><small>3.5</small><br>O:${markets.total_goals.over_35}% U:${markets.total_goals.under_35}%</div>
-                    </div>
-                `;
-
-          // Scores exacts
-          html += `
-                    <h5>🎯 Scores exacts</h5>
-                    <div>
-                `;
-          markets.exact_scores.forEach((score) => {
-            html += `<span class="score-chip">${score.score} (${score.probability}%)</span>`;
+            list.appendChild(col);
           });
-          html += `</div>`;
+        }
 
-          // ============================================
-          // NOUVELLE SECTION: LINEUPS (COMPOSITIONS)
-          // ============================================
-          if (markets.lineups_info) {
-            html += `
-                        <div class="lineup-info mt-3">
-                            <h6><i class="fas fa-users"></i> Compositions prévues</h6>
-                            <div class="row">
-                                <div class="col-6">
-                                    <strong>🏠 ${m.home_team}</strong><br>
-                                    <small>Attaquants/Milieux titulaires: ${markets.lineups_info.home_starters_count || "?"}</small>
-                    `;
+        document.getElementById("matchesSection").style.display = "block";
+      }
 
-            if (markets.lineups_info.home_top_scorer_playing === false) {
-              html += `<br><span class="absent-badge"><i class="fas fa-exclamation-triangle"></i> Meilleur buteur ABSENT</span>`;
-            }
+      async function analyzeMatch(matchId) {
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("predictionSection").style.display = "none";
 
-            html += `
-                                </div>
-                                <div class="col-6">
-                                    <strong>✈️ ${m.away_team}</strong><br>
-                                    <small>Attaquants/Milieux titulaires: ${markets.lineups_info.away_starters_count || "?"}</small>
-                    `;
+        try {
+          const response = await fetch("/api/analyze-match", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ match_id: matchId }),
+          });
 
-            if (markets.lineups_info.away_top_scorer_playing === false) {
-              html += `<br><span class="absent-badge"><i class="fas fa-exclamation-triangle"></i> Meilleur buteur ABSENT</span>`;
-            }
+          const data = await response.json();
 
-            html += `
-                                </div>
-                            </div>
-                        </div>
-                    `;
+          if (data.success) {
+            displayPrediction(data);
+          } else {
+            alert("Erreur: " + data.error);
           }
+        } catch (error) {
+          alert("Erreur: " + error);
+        }
 
-          // ============================================
-          // NOUVELLE SECTION: HEAD2HEAD (HISTORIQUE)
-          // ============================================
-          if (
-            markets.head2head_info &&
-            markets.head2head_info.total_matches > 0
-          ) {
-            const h2h = markets.head2head_info;
-            html += `
-                        <div class="h2h-info mt-3">
-                            <h6><i class="fas fa-history"></i> Historique des confrontations (${h2h.total_matches} matchs)</h6>
-                            <div class="row text-center">
-                                <div class="col-4">
-                                    <strong>🏠 ${m.home_team}</strong><br>
-                                    <span class="badge bg-success">${h2h.home_wins} wins</span>
-                                </div>
-                                <div class="col-4">
-                                    <strong>🤝 Nuls</strong><br>
-                                    <span class="badge bg-warning">${h2h.draws}</span>
-                                </div>
-                                <div class="col-4">
-                                    <strong>✈️ ${m.away_team}</strong><br>
-                                    <span class="badge bg-danger">${h2h.away_wins} wins</span>
-                                </div>
-                            </div>
-                    `;
+        document.getElementById("loading").style.display = "none";
+      }
 
-            // Afficher les 3 derniers matchs si disponibles
-            if (h2h.recent_matches && h2h.recent_matches.length > 0) {
-              html += `<div class="mt-2"><small><strong>Derniers matchs:</strong><br>`;
-              h2h.recent_matches.slice(0, 3).forEach((match) => {
-                let emoji =
-                  match.winner === m.home_team
-                    ? "🏠"
-                    : match.winner === m.away_team
-                      ? "✈️"
-                      : "🤝";
-                html += `${emoji} ${match.score} `;
-              });
-              html += `</small></div>`;
-            }
+      function displayPrediction(data) {
+        const content = document.getElementById("predictionContent");
+        const match = data.match;
+        const markets = data.markets;
 
-            html += `</div>`;
-          }
-
-          // Mi-temps
-          html += `
-                    <div class="row mt-3">
-                        <div class="col-6">
-                            <h5>⏱️ 1ère MT</h5>
-                            <small>Expected: ${markets.halftime_goals.expected_goals}</small><br>
-                            <small>Over 0.5: ${markets.halftime_goals.over_05}%</small>
-                        </div>
-                        <div class="col-6">
-                            <h5>⚖️ Comparaison</h5>
-                            <small>1ère > 2ème: ${markets.halftime_comparison.first_half_more}%</small><br>
-                            <small>2ème > 1ère: ${markets.halftime_comparison.second_half_more}%</small>
+        let html = `
+                <h4 class="text-center mb-4">${match.home_team} vs ${match.away_team}</h4>
+                <p class="text-center">📅 ${match.date} à ${match.time} - ${match.competition}</p>
+                <p class="text-center"><strong>Confiance globale: ${markets.global_confidence.average}% (${markets.global_confidence.level})</strong></p>
+                
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card p-3 text-center">
+                            <h5>1N2</h5>
+                            <p>🏠 ${markets["1N2"].home}%</p>
+                            <p>🤝 ${markets["1N2"].draw}%</p>
+                            <p>✈️ ${markets["1N2"].away}%</p>
                         </div>
                     </div>
-                `;
-
-          html += `
-                            </div>
+                    <div class="col-md-4">
+                        <div class="card p-3 text-center">
+                            <h5>Double Chance</h5>
+                            <p>1N: ${markets.double_chance["1N"]}%</p>
+                            <p>N2: ${markets.double_chance["N2"]}%</p>
+                            <p>12: ${markets.double_chance["12"]}%</p>
                         </div>
                     </div>
-                `;
-        });
+                    <div class="col-md-4">
+                        <div class="card p-3 text-center">
+                            <h5>BTTS</h5>
+                            <p>⚽⚽ Oui: ${markets.btts.oui}%</p>
+                            <p>🔒 Non: ${markets.btts.non}%</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card p-3">
+                            <h5>Total de buts</h5>
+                            <p>📊 Attendu: ${markets.total_goals.expected}</p>
+                            <p>📈 Over 2.5: ${markets.total_goals.over_25}%</p>
+                            <p>📉 Under 2.5: ${markets.total_goals.under_25}%</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card p-3">
+                            <h5>Scores exacts</h5>
+            `;
 
-        $("#predictionsContainer").html(html);
+        if (markets.exact_scores) {
+          markets.exact_scores.slice(0, 3).forEach((score) => {
+            html += `<p>${score.score}: ${score.probability}%</p>`;
+          });
+        }
+
+        html += `</div></div></div>`;
+
+        if (data.safe_bets && data.safe_bets.length > 0) {
+          html += `<h5 class="mt-4">🎯 Paris recommandés</h5>`;
+          data.safe_bets.forEach((bet) => {
+            html += `
+                        <div class="bet-item">
+                            <strong>${bet.emoji} ${bet.prediction}</strong><br>
+                            Probabilité: ${bet.probability}% (${bet.confidence})<br>
+                            <small>${bet.reason || ""}</small>
+                        </div>
+                    `;
+          });
+        }
+
+        content.innerHTML = html;
+        document.getElementById("predictionSection").style.display = "block";
       }
     </script>
   </body>
