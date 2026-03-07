@@ -20,7 +20,7 @@ warnings.filterwarnings('ignore')
 class FootballMatchSelectorUltra:
     """
     Programme ULTRA-INTELLIGENT de prédiction de matchs de football
-    Version ULTIME avec Lineups et Head2Head
+    Version ULTIME avec Lineups, Head2Head, Météo, Motivation et Contexte
     """
     
     def __init__(self, api_key="1b9fa9eead33409cb75f3d0a2df60324"):
@@ -60,8 +60,11 @@ class FootballMatchSelectorUltra:
         self.players_cache = {}
         self.scorers_cache = {}
         self.historical_results = {}
-        self.lineups_cache = {}  # NOUVEAU: Cache pour les compositions
-        self.head2head_cache = {}  # NOUVEAU: Cache pour l'historique
+        self.lineups_cache = {}
+        self.head2head_cache = {}
+        self.standings_cache = {}  # NOUVEAU: Cache pour les classements
+        self.weather_cache = {}     # NOUVEAU: Cache pour la météo
+        self.team_schedule_cache = {} # NOUVEAU: Cache pour le calendrier des équipes
         
         # Paramètres pour le modèle de Poisson
         self.league_averages = self._init_league_averages()
@@ -190,7 +193,387 @@ class FootballMatchSelectorUltra:
         return None
     
     # ============================================
-    # NOUVELLES MÉTHODES: LINEUPS ET HEAD2HEAD
+    # NOUVELLES MÉTHODES: MÉTÉO
+    # ============================================
+    
+    def get_weather(self, city, date):
+        """
+        Récupère les prévisions météo pour une ville
+        Utilise Open-Meteo (gratuit, sans clé)
+        """
+        cache_key = f"{city}_{date}"
+        
+        if cache_key in self.weather_cache:
+            return self.weather_cache[cache_key]
+        
+        try:
+            # Coordonnées approximatives des grandes villes
+            city_coords = {
+                'London': (51.5074, -0.1278),
+                'Manchester': (53.4808, -2.2426),
+                'Liverpool': (53.4084, -2.9916),
+                'Birmingham': (52.4862, -1.8904),
+                'Madrid': (40.4168, -3.7038),
+                'Barcelona': (41.3851, 2.1734),
+                'Seville': (37.3891, -5.9845),
+                'Valencia': (39.4699, -0.3763),
+                'Rome': (41.9028, 12.4964),
+                'Milan': (45.4642, 9.1900),
+                'Turin': (45.0703, 7.6869),
+                'Naples': (40.8518, 14.2681),
+                'Berlin': (52.5200, 13.4050),
+                'Munich': (48.1351, 11.5820),
+                'Hamburg': (53.5511, 9.9937),
+                'Paris': (48.8566, 2.3522),
+                'Lyon': (45.7640, 4.8357),
+                'Marseille': (43.2965, 5.3698),
+            }
+            
+            # Chercher la ville dans le dictionnaire
+            lat, lon = city_coords.get(city, (48.8566, 2.3522))  # Paris par défaut
+            
+            # Appel à l'API Open-Meteo
+            url = "https://api.open-meteo.com/v1/forecast"
+            params = {
+                'latitude': lat,
+                'longitude': lon,
+                'hourly': 'temperature_2m,precipitation,weathercode',
+                'start_date': date,
+                'end_date': date,
+                'timezone': 'auto'
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Prendre les données à 15h (heure typique des matchs)
+                hour_index = 15
+                if 'hourly' in data and len(data['hourly']['time']) > hour_index:
+                    weather_result = {
+                        'temperature': data['hourly']['temperature_2m'][hour_index],
+                        'precipitation': data['hourly']['precipitation'][hour_index],
+                        'weathercode': data['hourly']['weathercode'][hour_index],
+                        'condition': self._decode_weather_code(data['hourly']['weathercode'][hour_index])
+                    }
+                    
+                    self.weather_cache[cache_key] = weather_result
+                    return weather_result
+            
+            return None
+            
+        except Exception as e:
+            print(f"Erreur récupération météo: {e}")
+            return None
+    
+    def _decode_weather_code(self, code):
+        """Décode le code météo Open-Meteo en condition lisible"""
+        if code == 0:
+            return "☀️ Dégagé"
+        elif code in [1, 2, 3]:
+            return "⛅ Partiellement nuageux"
+        elif code in [45, 48]:
+            return "🌫️ Brouillard"
+        elif code in [51, 53, 55]:
+            return "🌧️ Bruine"
+        elif code in [61, 63, 65]:
+            return "🌧️ Pluie"
+        elif code in [71, 73, 75]:
+            return "❄️ Neige"
+        elif code in [80, 81, 82]:
+            return "🌧️ Averses"
+        elif code in [95, 96, 99]:
+            return "⛈️ Orage"
+        else:
+            return "🌡️ Inconnu"
+    
+    def _apply_weather_adjustments(self, markets, weather, match):
+        """
+        Ajuste les probabilités en fonction de la météo
+        """
+        if not weather:
+            return markets
+        
+        # Pluie -> moins de buts
+        if 'Pluie' in weather['condition'] or 'Averses' in weather['condition']:
+            markets['total_goals']['over_25'] *= 0.9
+            markets['total_goals']['under_25'] *= 1.1
+            markets['btts']['oui'] *= 0.95
+            markets['btts']['non'] *= 1.05
+            
+            # La pluie désavantage légèrement l'équipe visiteuse
+            markets['1N2']['away'] *= 0.95
+            markets['1N2']['home'] *= 1.02
+        
+        # Neige -> très peu de buts
+        elif 'Neige' in weather['condition']:
+            markets['total_goals']['over_25'] *= 0.7
+            markets['total_goals']['under_25'] *= 1.3
+            markets['btts']['oui'] *= 0.8
+            markets['btts']['non'] *= 1.2
+        
+        # Vent fort (non disponible dans cette API simple)
+        
+        # Température froide (<5°C) -> moins de buts
+        if weather['temperature'] < 5:
+            markets['total_goals']['over_25'] *= 0.95
+            markets['total_goals']['under_25'] *= 1.05
+        
+        # Température chaude (>25°C) -> légèrement plus de buts (fatigue)
+        elif weather['temperature'] > 25:
+            markets['total_goals']['over_25'] *= 1.05
+            markets['total_goals']['under_25'] *= 0.95
+        
+        return markets
+    
+    # ============================================
+    # NOUVELLES MÉTHODES: CONTEXTE DE COMPÉTITION
+    # ============================================
+    
+    def get_league_standings(self, competition_code):
+        """
+        Récupère le classement d'une compétition
+        Utilise l'API football-data.org
+        """
+        cache_key = f"standings_{competition_code}"
+        
+        if cache_key in self.standings_cache:
+            return self.standings_cache[cache_key]
+        
+        try:
+            url = f"{self.base_url}competitions/{competition_code}/standings"
+            response = self._rate_limited_request(url)
+            
+            if response and response.status_code == 200:
+                data = response.json()
+                
+                standings = {}
+                for standing in data.get('standings', []):
+                    if standing.get('type') == 'TOTAL':
+                        for team in standing.get('table', []):
+                            team_name = team['team']['name']
+                            standings[team_name] = {
+                                'position': team['position'],
+                                'points': team['points'],
+                                'played': team['playedGames'],
+                                'won': team['won'],
+                                'drawn': team['draw'],
+                                'lost': team['lost'],
+                                'goals_for': team['goalsFor'],
+                                'goals_against': team['goalsAgainst']
+                            }
+                
+                self.standings_cache[cache_key] = standings
+                return standings
+            
+            return None
+            
+        except Exception as e:
+            print(f"Erreur récupération classement: {e}")
+            return None
+    
+    def analyze_motivation(self, match, standings):
+        """
+        Analyse la motivation des équipes en fonction du contexte
+        """
+        home_team = match['home_team']
+        away_team = match['away_team']
+        
+        motivation = {
+            'home': 1.0,
+            'away': 1.0,
+            'home_reason': [],
+            'away_reason': []
+        }
+        
+        if not standings:
+            return motivation
+        
+        home_info = standings.get(home_team)
+        away_info = standings.get(away_team)
+        
+        if home_info:
+            pos = home_info['position']
+            # Top 3 -> lutte pour le titre
+            if pos <= 3:
+                motivation['home'] *= 1.1
+                motivation['home_reason'].append("Lutte pour le titre")
+            # Top 5 -> lutte pour l'Europe
+            elif pos <= 5:
+                motivation['home'] *= 1.05
+                motivation['home_reason'].append("Lutte pour l'Europe")
+            # Bottom 3 -> lutte pour le maintien
+            elif pos >= 18:
+                motivation['home'] *= 1.08
+                motivation['home_reason'].append("Lutte pour le maintien")
+            # Milieu de tableau -> rien à jouer
+            else:
+                motivation['home'] *= 0.95
+                motivation['home_reason'].append("Peu d'enjeu")
+        
+        if away_info:
+            pos = away_info['position']
+            if pos <= 3:
+                motivation['away'] *= 1.1
+                motivation['away_reason'].append("Lutte pour le titre")
+            elif pos <= 5:
+                motivation['away'] *= 1.05
+                motivation['away_reason'].append("Lutte pour l'Europe")
+            elif pos >= 18:
+                motivation['away'] *= 1.08
+                motivation['away_reason'].append("Lutte pour le maintien")
+            else:
+                motivation['away'] *= 0.95
+                motivation['away_reason'].append("Peu d'enjeu")
+        
+        return motivation
+    
+    # ============================================
+    # NOUVELLES MÉTHODES: FATIGUE DES JOUEURS
+    # ============================================
+    
+    def get_team_recent_schedule(self, team_id, days=10):
+        """
+        Récupère le calendrier récent d'une équipe pour évaluer la fatigue
+        """
+        cache_key = f"schedule_{team_id}"
+        
+        if cache_key in self.team_schedule_cache:
+            return self.team_schedule_cache[cache_key]
+        
+        try:
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=days)
+            
+            url = f"{self.base_url}teams/{team_id}/matches"
+            params = {
+                'dateFrom': start_date.strftime('%Y-%m-%d'),
+                'dateTo': end_date.strftime('%Y-%m-%d'),
+                'status': 'FINISHED'
+            }
+            
+            response = self._rate_limited_request(url, params)
+            
+            if response and response.status_code == 200:
+                data = response.json()
+                matches = data.get('matches', [])
+                
+                # Compter les matchs récents
+                match_count = len(matches)
+                
+                # Vérifier s'il y a eu un match dans les 3 derniers jours
+                recent_match = False
+                three_days_ago = datetime.now() - timedelta(days=3)
+                
+                for match in matches:
+                    match_date = datetime.strptime(match['utcDate'][:10], '%Y-%m-%d')
+                    if match_date >= three_days_ago:
+                        recent_match = True
+                        break
+                
+                result = {
+                    'matches_last_10_days': match_count,
+                    'played_recently': recent_match,
+                    'fatigue_factor': min(1.0, 1.0 - (match_count * 0.03))  # -3% par match
+                }
+                
+                self.team_schedule_cache[cache_key] = result
+                return result
+            
+            return None
+            
+        except Exception as e:
+            print(f"Erreur récupération calendrier: {e}")
+            return None
+    
+    def _apply_fatigue_adjustments(self, markets, home_schedule, away_schedule):
+        """
+        Ajuste les probabilités en fonction de la fatigue
+        """
+        if home_schedule:
+            if home_schedule['played_recently']:
+                markets['1N2']['home'] *= 0.95
+                markets['total_goals']['over_25'] *= 0.97
+            
+            markets['1N2']['home'] *= home_schedule['fatigue_factor']
+        
+        if away_schedule:
+            if away_schedule['played_recently']:
+                markets['1N2']['away'] *= 0.95
+                markets['total_goals']['over_25'] *= 0.97
+            
+            markets['1N2']['away'] *= away_schedule['fatigue_factor']
+        
+        return markets
+    
+    # ============================================
+    # NOUVELLES MÉTHODES: ANALYSE GLOBALE DU CONTEXTE
+    # ============================================
+    
+    def analyze_context(self, match):
+        """
+        Analyse globale du contexte du match
+        """
+        print(f"   📊 Analyse du contexte...")
+        
+        context = {
+            'motivation': None,
+            'weather': None,
+            'fatigue': {},
+            'standings': None
+        }
+        
+        # Récupérer le classement
+        standings = self.get_league_standings(match['competition'])
+        if standings:
+            context['standings'] = standings
+            context['motivation'] = self.analyze_motivation(match, standings)
+        
+        # Récupérer la météo
+        city = match['home_team'].split()[-1]  # Dernier mot du nom de l'équipe
+        context['weather'] = self.get_weather(city, match['date'])
+        
+        # Analyser la fatigue
+        home_schedule = self.get_team_recent_schedule(match['home_team_id'])
+        away_schedule = self.get_team_recent_schedule(match['away_team_id'])
+        
+        context['fatigue'] = {
+            'home': home_schedule,
+            'away': away_schedule
+        }
+        
+        return context
+    
+    def _apply_context_adjustments(self, markets, context):
+        """
+        Applique tous les ajustements contextuels
+        """
+        if not context:
+            return markets
+        
+        # Ajustements météo
+        if context.get('weather'):
+            markets = self._apply_weather_adjustments(markets, context['weather'], None)
+        
+        # Ajustements motivation
+        if context.get('motivation'):
+            mot = context['motivation']
+            markets['1N2']['home'] *= mot['home']
+            markets['1N2']['away'] *= mot['away']
+        
+        # Ajustements fatigue
+        if context.get('fatigue'):
+            markets = self._apply_fatigue_adjustments(
+                markets, 
+                context['fatigue'].get('home'),
+                context['fatigue'].get('away')
+            )
+        
+        return markets
+    
+    # ============================================
+    # MÉTHODES EXISTANTES: LINEUPS ET HEAD2HEAD
     # ============================================
     
     def get_match_lineups(self, match_id):
@@ -884,11 +1267,11 @@ class FootballMatchSelectorUltra:
         }
     
     # ============================================
-    # ANALYSE DES MARCHÉS (VERSION ULTIME)
+    # ANALYSE DES MARCHÉS (VERSION ULTIME AVEC CONTEXTE)
     # ============================================
     
     def analyze_all_markets(self, match):
-        """Analyse tous les marchés disponibles avec lineups et head2head"""
+        """Analyse tous les marchés disponibles avec lineups, head2head et contexte"""
         print(f"\n🔍 Analyse ULTIME de {match['home_team']} vs {match['away_team']}...")
         
         # Prédiction de base Poisson
@@ -900,6 +1283,9 @@ class FootballMatchSelectorUltra:
         
         print(f"   📜 Récupération de l'historique...")
         h2h = self.get_head2head(match['id'])
+        
+        print(f"   🌍 Analyse du contexte...")
+        context = self.analyze_context(match)
         
         # Initialisation des résultats
         markets = {}
@@ -957,9 +1343,10 @@ class FootballMatchSelectorUltra:
         # 7. COMPARAISON MI-TEMPS
         markets['halftime_comparison'] = self._calculate_halftime_comparison(match)
         
-        # 8. APPLIQUER LES AJUSTEMENTS (LINEUPS ET HEAD2HEAD)
+        # 8. APPLIQUER LES AJUSTEMENTS (LINEUPS, HEAD2HEAD ET CONTEXTE)
         markets = self._apply_lineups_adjustments(markets, lineups, match)
         markets = self._apply_head2head_adjustments(markets, h2h, match)
+        markets = self._apply_context_adjustments(markets, context)
         
         # 9. CONFIDENCE GLOBALE
         markets['global_confidence'] = self._calculate_global_confidence(markets)
@@ -967,6 +1354,11 @@ class FootballMatchSelectorUltra:
         # 10. AJOUTER LES INFORMATIONS SUPPLÉMENTAIRES
         markets['lineups_info'] = lineups
         markets['head2head_info'] = h2h
+        markets['context_info'] = {
+            'weather': context.get('weather'),
+            'motivation': context.get('motivation'),
+            'fatigue': context.get('fatigue')
+        }
         
         return markets
     
