@@ -159,6 +159,7 @@
 
         try {
           const response = await fetch("/api/matches", {
+            // ✅ Vérifié
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -166,6 +167,14 @@
               days_ahead: days,
             }),
           });
+
+          // Vérifier si la réponse est du JSON
+          const contentType = response.headers.get("content-type");
+          if (!contentType || !contentType.includes("application/json")) {
+            throw new Error(
+              "La réponse n'est pas du JSON. URL peut-être incorrecte.",
+            );
+          }
 
           const data = await response.json();
 
@@ -175,7 +184,45 @@
             alert("Erreur: " + data.error);
           }
         } catch (error) {
-          alert("Erreur: " + error);
+          console.error("Erreur fetch:", error);
+          alert("Erreur de connexion: " + error.message);
+        }
+
+        document.getElementById("loading").style.display = "none";
+      }
+
+      async function analyzeMatch(matchId) {
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("predictionSection").style.display = "none";
+
+        try {
+          const response = await fetch("/api/analyze-match", {
+            // ✅ Vérifié
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ match_id: matchId }),
+          });
+
+          // Vérifier si la réponse est du JSON
+          const contentType = response.headers.get("content-type");
+          if (!contentType || !contentType.includes("application/json")) {
+            const text = await response.text();
+            console.error("Réponse HTML reçue:", text.substring(0, 200));
+            throw new Error(
+              "La réponse n'est pas du JSON. URL peut-être incorrecte.",
+            );
+          }
+
+          const data = await response.json();
+
+          if (data.success) {
+            displayPrediction(data);
+          } else {
+            alert("Erreur: " + data.error);
+          }
+        } catch (error) {
+          console.error("Erreur analyse:", error);
+          alert("Erreur lors de l'analyse: " + error.message);
         }
 
         document.getElementById("loading").style.display = "none";
@@ -193,42 +240,17 @@
             const col = document.createElement("div");
             col.className = "col-md-6";
             col.innerHTML = `
-                        <div class="card match-card p-3" onclick="analyzeMatch(${match.id})">
-                            <h5>${match.home_team} vs ${match.away_team}</h5>
-                            <p class="mb-1"><i class="far fa-calendar"></i> ${match.date} à ${match.time}</p>
-                            <p class="mb-0"><i class="far fa-building"></i> ${match.competition}</p>
-                        </div>
-                    `;
+                    <div class="card match-card p-3" onclick="analyzeMatch(${match.id})">
+                        <h5>${match.home_team} vs ${match.away_team}</h5>
+                        <p class="mb-1"><i class="far fa-calendar"></i> ${match.date} à ${match.time}</p>
+                        <p class="mb-0"><i class="far fa-building"></i> ${match.competition}</p>
+                    </div>
+                `;
             list.appendChild(col);
           });
         }
 
         document.getElementById("matchesSection").style.display = "block";
-      }
-
-      async function analyzeMatch(matchId) {
-        document.getElementById("loading").style.display = "block";
-        document.getElementById("predictionSection").style.display = "none";
-
-        try {
-          const response = await fetch("/api/analyze-match", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ match_id: matchId }),
-          });
-
-          const data = await response.json();
-
-          if (data.success) {
-            displayPrediction(data);
-          } else {
-            alert("Erreur: " + data.error);
-          }
-        } catch (error) {
-          alert("Erreur: " + error);
-        }
-
-        document.getElementById("loading").style.display = "none";
       }
 
       function displayPrediction(data) {
@@ -237,49 +259,49 @@
         const markets = data.markets;
 
         let html = `
-                <h4 class="text-center mb-4">${match.home_team} vs ${match.away_team}</h4>
-                <p class="text-center">📅 ${match.date} à ${match.time} - ${match.competition}</p>
-                <p class="text-center"><strong>Confiance globale: ${markets.global_confidence.average}% (${markets.global_confidence.level})</strong></p>
-                
-                <div class="row mt-4">
-                    <div class="col-md-4">
-                        <div class="card p-3 text-center">
-                            <h5>1N2</h5>
-                            <p>🏠 ${markets["1N2"].home}%</p>
-                            <p>🤝 ${markets["1N2"].draw}%</p>
-                            <p>✈️ ${markets["1N2"].away}%</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card p-3 text-center">
-                            <h5>Double Chance</h5>
-                            <p>1N: ${markets.double_chance["1N"]}%</p>
-                            <p>N2: ${markets.double_chance["N2"]}%</p>
-                            <p>12: ${markets.double_chance["12"]}%</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card p-3 text-center">
-                            <h5>BTTS</h5>
-                            <p>⚽⚽ Oui: ${markets.btts.oui}%</p>
-                            <p>🔒 Non: ${markets.btts.non}%</p>
-                        </div>
+            <h4 class="text-center mb-4">${match.home_team} vs ${match.away_team}</h4>
+            <p class="text-center">📅 ${match.date} à ${match.time} - ${match.competition}</p>
+            <p class="text-center"><strong>Confiance globale: ${markets.global_confidence.average}% (${markets.global_confidence.level})</strong></p>
+            
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card p-3 text-center">
+                        <h5>1N2</h5>
+                        <p>🏠 ${markets["1N2"].home}%</p>
+                        <p>🤝 ${markets["1N2"].draw}%</p>
+                        <p>✈️ ${markets["1N2"].away}%</p>
                     </div>
                 </div>
-                
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <div class="card p-3">
-                            <h5>Total de buts</h5>
-                            <p>📊 Attendu: ${markets.total_goals.expected}</p>
-                            <p>📈 Over 2.5: ${markets.total_goals.over_25}%</p>
-                            <p>📉 Under 2.5: ${markets.total_goals.under_25}%</p>
-                        </div>
+                <div class="col-md-4">
+                    <div class="card p-3 text-center">
+                        <h5>Double Chance</h5>
+                        <p>1N: ${markets.double_chance["1N"]}%</p>
+                        <p>N2: ${markets.double_chance["N2"]}%</p>
+                        <p>12: ${markets.double_chance["12"]}%</p>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card p-3">
-                            <h5>Scores exacts</h5>
-            `;
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3 text-center">
+                        <h5>BTTS</h5>
+                        <p>⚽⚽ Oui: ${markets.btts.oui}%</p>
+                        <p>🔒 Non: ${markets.btts.non}%</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="card p-3">
+                        <h5>Total de buts</h5>
+                        <p>📊 Attendu: ${markets.total_goals.expected}</p>
+                        <p>📈 Over 2.5: ${markets.total_goals.over_25}%</p>
+                        <p>📉 Under 2.5: ${markets.total_goals.under_25}%</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-3">
+                        <h5>Scores exacts</h5>
+        `;
 
         if (markets.exact_scores) {
           markets.exact_scores.slice(0, 3).forEach((score) => {
@@ -293,12 +315,12 @@
           html += `<h5 class="mt-4">🎯 Paris recommandés</h5>`;
           data.safe_bets.forEach((bet) => {
             html += `
-                        <div class="bet-item">
-                            <strong>${bet.emoji} ${bet.prediction}</strong><br>
-                            Probabilité: ${bet.probability}% (${bet.confidence})<br>
-                            <small>${bet.reason || ""}</small>
-                        </div>
-                    `;
+                    <div class="bet-item">
+                        <strong>${bet.emoji} ${bet.prediction}</strong><br>
+                        Probabilité: ${bet.probability}% (${bet.confidence})<br>
+                        <small>${bet.reason || ""}</small>
+                    </div>
+                `;
           });
         }
 
